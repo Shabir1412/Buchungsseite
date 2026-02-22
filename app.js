@@ -1,37 +1,5 @@
-const rooms = [
-  ...[101, 102, 103, 104, 105, 201, 202, 203, 204, 205].map((n) => ({
-    id: String(n),
-    label: `Zimmer ${n}`,
-    type: 'Standard',
-    capacity: 2,
-  })),
-  { id: '301A', label: 'Apartment 301A', type: 'Apartment', capacity: 4 },
-  { id: '301B', label: 'Apartment 301B', type: 'Apartment', capacity: 4 },
-  { id: '11', label: 'Familienzimmer 11', type: 'Familienzimmer', capacity: 4 },
-];
-
-const bookings = [
-  {
-    id: crypto.randomUUID(),
-    roomId: '101',
-    guestName: 'Anna Becker',
-    checkIn: '2026-03-01',
-    checkOut: '2026-03-04',
-    guests: 2,
-    details: 'Direktbuchung Website',
-    contact: 'anna@example.com',
-  },
-  {
-    id: crypto.randomUUID(),
-    roomId: '301A',
-    guestName: 'Familie Yilmaz',
-    checkIn: '2026-03-02',
-    checkOut: '2026-03-08',
-    guests: 4,
-    details: 'Booking API',
-    contact: '+49 170 123456',
-  },
-];
+let rooms = [];
+let bookings = [];
 
 const today = new Date();
 
@@ -95,6 +63,7 @@ function getBookingsForRoom(roomId, range) {
 }
 
 function renderRoomOptions() {
+  els.roomId.innerHTML = '';
   rooms.forEach((room) => {
     const opt = document.createElement('option');
     opt.value = room.id;
@@ -105,7 +74,7 @@ function renderRoomOptions() {
 
 function renderCalendar() {
   const range = getRange(els.viewMode.value, els.referenceDate.value);
-  els.calendarMeta.textContent = `${range.label} • Echtzeit-Sync simuliert (lokaler State)`;
+  els.calendarMeta.textContent = `${range.label} • Live-Daten aus lokaler JSON-Datenbasis`;
   els.calendarBody.innerHTML = '';
 
   rooms.forEach((room) => {
@@ -144,64 +113,71 @@ function setMessage(text, type) {
   els.formMessage.className = `message ${type}`;
 }
 
-function handleBookingSubmit(event) {
-  event.preventDefault();
-  const room = rooms.find((r) => r.id === els.roomId.value);
-  const checkIn = els.checkIn.value;
-  const checkOut = els.checkOut.value;
-  const guests = Number(els.guests.value);
-
-  if (!room || !checkIn || !checkOut || checkIn >= checkOut) {
-    setMessage('Bitte gültige An- und Abreise angeben.', 'error');
-    return;
+async function loadData() {
+  const [roomsRes, bookingsRes] = await Promise.all([fetch('/api/rooms'), fetch('/api/bookings')]);
+  if (!roomsRes.ok || !bookingsRes.ok) {
+    throw new Error('API nicht erreichbar');
   }
 
-  if (guests > room.capacity) {
-    setMessage(`Maximale Kapazität für ${room.label}: ${room.capacity} Personen.`, 'error');
-    return;
-  }
-
-  const conflict = bookings.some(
-    (b) => b.roomId === room.id && overlaps(b.checkIn, b.checkOut, checkIn, checkOut)
-  );
-
-  if (conflict) {
-    setMessage('Für dieses Zimmer gibt es in dem Zeitraum bereits eine Buchung.', 'error');
-    return;
-  }
-
-  bookings.push({
-    id: crypto.randomUUID(),
-    roomId: room.id,
-    guestName: els.guestName.value.trim(),
-    checkIn,
-    checkOut,
-    guests,
-    contact: els.contact.value.trim(),
-    details: els.details.value.trim(),
-  });
-
-  setMessage('Buchung erfolgreich gespeichert und Kalender in Echtzeit aktualisiert.', 'success');
-  els.bookingForm.reset();
-  els.roomId.value = rooms[0].id;
-  els.guests.value = '2';
-  renderCalendar();
+  rooms = await roomsRes.json();
+  bookings = await bookingsRes.json();
 }
 
-function init() {
+async function handleBookingSubmit(event) {
+  event.preventDefault();
+
+  const payload = {
+    roomId: els.roomId.value,
+    guestName: els.guestName.value.trim(),
+    checkIn: els.checkIn.value,
+    checkOut: els.checkOut.value,
+    guests: Number(els.guests.value),
+    contact: els.contact.value.trim(),
+    details: els.details.value.trim(),
+  };
+
+  try {
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const body = await res.json();
+    if (!res.ok) {
+      setMessage(body.error || 'Buchung konnte nicht gespeichert werden.', 'error');
+      return;
+    }
+
+    bookings.push(body);
+    setMessage('Buchung gespeichert (persistiert in Datenbasis).', 'success');
+    els.bookingForm.reset();
+    els.roomId.value = rooms[0].id;
+    els.guests.value = '2';
+    renderCalendar();
+  } catch {
+    setMessage('Server nicht erreichbar. Bitte Backend starten.', 'error');
+  }
+}
+
+async function init() {
   const isoToday = dateToIso(today);
   els.referenceDate.value = isoToday;
   els.checkIn.value = isoToday;
   els.checkOut.value = addDays(isoToday, 1);
 
-  renderRoomOptions();
-  els.roomId.value = rooms[0].id;
-
   els.viewMode.addEventListener('change', renderCalendar);
   els.referenceDate.addEventListener('change', renderCalendar);
   els.bookingForm.addEventListener('submit', handleBookingSubmit);
 
-  renderCalendar();
+  try {
+    await loadData();
+    renderRoomOptions();
+    els.roomId.value = rooms[0].id;
+    renderCalendar();
+  } catch {
+    setMessage('Backend/API nicht verfügbar. Starte: node server.js', 'error');
+  }
 }
 
 init();

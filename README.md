@@ -1,50 +1,36 @@
-# Online-Buchungssystem – MVP
+# Online-Buchungssystem – Live MVP (Frontend + Datenbasis)
 
-Dieses Repository enthält jetzt einen **lauffähigen Web-Prototyp** für dein Hotel-Buchungssystem.
+Dieses Projekt ist jetzt ein **lauffähiges Mini-System mit Frontend und persistenter Datenbasis**.
 
-## Enthaltene Funktionen
-- Zimmerstruktur gemäß Vorgabe:
-  - Standardzimmer: 101–105, 201–205
-  - Apartments: 301A und 301B (intern getrennt, damit keine Doppelbuchung)
-  - Familienzimmer: 11
-- Kalenderansicht mit Modi:
-  - Tag
-  - Woche
-  - Monat
-- Zimmerweise Belegungsanzeige mit:
-  - Gastname
-  - Aufenthaltszeitraum
-  - Personenanzahl
-  - Buchungsdetails
-- Online-Buchungsformular mit:
-  - Zeitraum
-  - Personen
-  - Kontaktdaten
-  - Details
-- Sofortige Aktualisierung der Kalenderansicht nach erfolgreicher Buchung
-- Konfliktprüfung gegen Doppelbuchungen
-- Responsive Darstellung für Desktop/Tablet/Smartphone
+## Was ist jetzt neu?
+- Live-Frontend bleibt wie gehabt (Kalender + Buchungsformular).
+- Zusätzlich gibt es ein kleines Backend (`server.js`) mit API-Endpunkten.
+- Buchungen werden in `data/bookings.json` gespeichert und bleiben nach Neustart erhalten.
 
-## Projektstruktur
-- `index.html` – Oberfläche (Kalender + Buchungsmaske)
-- `styles.css` – responsives Styling
-- `app.js` – Datenmodell, Verfügbarkeitsprüfung, Render-Logik
+## Dateien
+- `index.html` – UI
+- `styles.css` – responsives Design
+- `app.js` – Frontend-Logik, API-Aufrufe
+- `server.js` – Node.js HTTP-Server + API + statische Dateien
+- `data/bookings.json` – persistente Buchungsdaten
 
-## Lokal starten
-Da es eine statische Web-App ist, reicht ein einfacher HTTP-Server:
+## Starten (wichtig)
+Nicht mehr `python3 -m http.server`, sondern:
 
 ```bash
-python3 -m http.server 4173
+node server.js
 ```
 
-Dann im Browser öffnen:
+Dann öffnen:
 
 ```text
 http://localhost:4173
 ```
 
-## Nächste Ausbaustufen (optional)
-- Persistenz über Backend + Datenbank (statt In-Memory)
-- API-Adapter für Booking & Homepage
-- Auth/Rollen für Rezeption/Admin
-- Echte Echtzeit-Synchronisierung per WebSocket/Webhooks
+## API (lokal)
+- `GET /api/rooms` → Zimmerliste
+- `GET /api/bookings` → bestehende Buchungen
+- `POST /api/bookings` → neue Buchung (mit Validierung, Konfliktprüfung)
+
+## Hinweis
+Das ist weiterhin ein MVP, aber jetzt mit echter Datenbasis-Datei. Nächster Schritt wäre Datenbank (z. B. PostgreSQL) + echte externe API-Synchronisierung.
