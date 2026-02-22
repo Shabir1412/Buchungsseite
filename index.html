@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hotel Buchungssystem</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Hotel Buchungssystem</h1>
+      <p>Zentrale Übersicht & Online-Buchung</p>
+    </header>
+
+    <main class="layout">
+      <section class="panel controls">
+        <h2>Kalenderansicht</h2>
+        <div class="row">
+          <label for="viewMode">Modus</label>
+          <select id="viewMode">
+            <option value="day">Tag</option>
+            <option value="week" selected>Woche</option>
+            <option value="month">Monat</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="referenceDate">Referenzdatum</label>
+          <input id="referenceDate" type="date" />
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Belegung nach Zimmer</h2>
+        <div id="calendarMeta" class="muted"></div>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Zimmer</th>
+                <th>Typ / Kapazität</th>
+                <th>Belegung</th>
+              </tr>
+            </thead>
+            <tbody id="calendarBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Online-Buchung</h2>
+        <form id="bookingForm" class="formGrid">
+          <label>
+            Zimmer
+            <select id="roomId" required></select>
+          </label>
+          <label>
+            Name
+            <input id="guestName" type="text" placeholder="Max Mustermann" required />
+          </label>
+          <label>
+            Anreise
+            <input id="checkIn" type="date" required />
+          </label>
+          <label>
+            Abreise
+            <input id="checkOut" type="date" required />
+          </label>
+          <label>
+            Personen
+            <input id="guests" type="number" min="1" max="8" value="2" required />
+          </label>
+          <label>
+            Kontakt (E-Mail / Telefon)
+            <input id="contact" type="text" placeholder="name@email.de" required />
+          </label>
+          <label class="wide">
+            Buchungsdetails
+            <textarea id="details" rows="3" placeholder="z. B. spätes Check-in"></textarea>
+          </label>
+          <button type="submit">Buchung speichern</button>
+        </form>
+        <p id="formMessage" class="message"></p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
